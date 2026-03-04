@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agentic-rag"
+version = "0.1.0"
+description = "An Agentic RAG system built with LangGraph"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=0.1.0",
+    "langchain-core",
+    "langchain-community",
+    "langchain-huggingface",
+    "langchain-ollama",
+    "langchain-qdrant",
+    "langchain-text-splitters",
+    "langgraph",
+    "qdrant-client",
+    "pymupdf4llm",
+    "gradio",
+    "loguru",
+    "pydantic-settings"
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
