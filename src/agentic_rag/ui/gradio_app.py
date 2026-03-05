@@ -77,20 +77,27 @@ def create_gradio_ui() -> gr.Blocks:
         secondary_hue="slate",
         neutral_hue="slate",
         font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "system-ui", "sans-serif"],
-        radius_size=gr.themes.sizes.radius_sm
+        radius_size=gr.themes.sizes.radius_md
     ).set(
-        body_background_fill="*neutral_50",
-        block_background_fill="white",
+        body_background_fill="#f8fafc", # Very soft slate-50
+        block_background_fill="#ffffff",
         block_border_width="1px",
-        block_border_color="*neutral_200",
-        border_color_primary="*primary_500",
-        color_accent_soft="*primary_50",
-        slider_color="*primary_500",
-        block_title_text_color="*neutral_800",
-        block_label_text_color="*neutral_600",
-        button_primary_background_fill="*primary_500",
-        button_primary_background_fill_hover="*primary_600",
-        button_primary_text_color="white",
+        block_border_color="#e2e8f0",
+        block_shadow="0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
+        border_color_primary="#3b82f6",
+        color_accent_soft="#eff6ff",
+        slider_color="#3b82f6",
+        block_title_text_color="#1e293b",
+        block_title_text_weight="600",
+        block_label_text_color="#475569",
+        button_primary_background_fill="#2563eb",
+        button_primary_background_fill_hover="#1d4ed8",
+        button_primary_text_color="#ffffff",
+        button_primary_shadow="0 4px 6px -1px rgba(37, 99, 235, 0.2), 0 2px 4px -1px rgba(37, 99, 235, 0.1)",
+        button_secondary_background_fill="#f1f5f9",
+        button_secondary_background_fill_hover="#e2e8f0",
+        button_secondary_text_color="#334155",
+        button_secondary_shadow="0 1px 2px 0 rgba(0, 0, 0, 0.05)"
     )
 
     with gr.Blocks(title="Agentic RAG Assistant") as demo:
