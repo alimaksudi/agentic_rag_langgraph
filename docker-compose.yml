@@ -22,8 +22,11 @@ services:
       - "7860:7860"
     environment:
       - QDRANT_URL=http://qdrant:6333
-      # Note: Users should provide their own API keys via an external .env file
-      # or by passing them to `docker-compose run -e OPENAI_API_KEY=...`
+      # To connect to a local Ollama instance on Mac/Windows, use:
+      # - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - .env
     volumes:

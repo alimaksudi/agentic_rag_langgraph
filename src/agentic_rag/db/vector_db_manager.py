@@ -24,10 +24,8 @@ class VectorDbManager(AbstractVectorDB):
 
     def __init__(self, db_path: str = settings.QDRANT_DB_PATH):
         """
-        Initializes search engines and connection to the local vector storage.
+        Initializes search engines and connection to the vector storage.
         """
-        logger.info(f"Initializing VectorDbManager at {db_path}")
-        
         # Search Engine Layer
         self.dense_embeddings = HuggingFaceEmbeddings(model_name=settings.DENSE_MODEL)
         self.sparse_embeddings = FastEmbedSparse(model_name=settings.SPARSE_MODEL)
@@ -36,10 +34,15 @@ class VectorDbManager(AbstractVectorDB):
         logger.info(f"Loading Cross-Encoder Re-ranker: {settings.RERANKER_MODEL}...")
         self.reranker = CrossEncoder(settings.RERANKER_MODEL)
         
-        # Storage Layer
-        self.client = QdrantClient(path=db_path)
+        # Storage Layer: Cloud/Docker vs Local Disk
+        if settings.QDRANT_URL:
+            logger.info(f"Connecting to remote Qdrant at {settings.QDRANT_URL}")
+            self.client = QdrantClient(url=settings.QDRANT_URL)
+        else:
+            logger.info(f"Initializing local Qdrant storage at {db_path}")
+            self.client = QdrantClient(path=db_path)
+            
         self.__sparse_name = settings.SPARSE_VECTOR_NAME
-        
         logger.debug("Embeddings engines and Re-ranker loaded successfully.")
 
     def create_collection(self, collection_name: str) -> None:

@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     QDRANT_DB_PATH: str = os.path.join(BASE_DIR, "qdrant_db")
 
     # --- Qdrant Configuration ---
+    QDRANT_URL: str | None = None
     CHILD_COLLECTION: str = "document_child_chunks"
     SPARSE_VECTOR_NAME: str = "sparse"
 
