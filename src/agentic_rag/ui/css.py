@@ -12,19 +12,19 @@ custom_css = """
     /* Clean up the main header with a sleek gradient and typography */
     .header-title {
         text-align: center;
-        margin-bottom: 2.5rem !important;
-        margin-top: 1.5rem !important;
+        margin-bottom: 0.5rem !important;
+        margin-top: 1rem !important;
     }
 
     .header-title h1 {
         font-weight: 800 !important;
-        font-size: 2.5rem !important;
+        font-size: 2rem !important;
         letter-spacing: -0.025em !important;
         background: linear-gradient(135deg, #1e293b 0%, #3b82f6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 0.5rem !important;
+        margin-bottom: 0.2rem !important;
     }
 
     /* Refine File UI components: softer borders and subtle hover effects */
@@ -49,11 +49,11 @@ custom_css = """
 
     /* Message Bubbles - Modern Apple-like aesthetic with delicate shadows */
     .message.user {
-        background-color: #2563eb !important; /* Solid vibrant blue */
-        color: #ffffff !important; 
-        border: none !important;
+        background-color: #eff6ff !important; /* Light blue tint */
+        color: #1e3a8a !important; /* Deep dark blue text */
+        border: 1px solid #bfdbfe !important; /* Soft light blue border */
         border-radius: 18px 18px 4px 18px !important; /* Asymmetric bubble */
-        box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.15), 0 2px 4px -1px rgba(37, 99, 235, 0.1) !important;
+        box-shadow: 0 2px 4px -1px rgba(37, 99, 235, 0.05) !important;
         padding: 12px 16px !important;
         font-weight: 400 !important;
     }

@@ -102,7 +102,7 @@ def create_gradio_ui() -> gr.Blocks:
         button_secondary_shadow="0 1px 2px 0 rgba(0, 0, 0, 0.05)"
     )
 
-    with gr.Blocks(title="Agentic RAG Assistant") as demo:
+    with gr.Blocks(title="Agentic RAG Assistant", fill_height=True) as demo:
         gr.Markdown("# Agentic RAG Assistant", elem_classes=["header-title"])
         
         with gr.Tab("Documents"):
@@ -175,7 +175,6 @@ def create_gradio_ui() -> gr.Blocks:
             with gr.Row():
                 with gr.Column(scale=3):
                     chatbot = gr.Chatbot(
-                        height=600, 
                         placeholder="Ask me anything about your documents! I can perform deep, autonomous research.",
                         show_label=False
                     )
