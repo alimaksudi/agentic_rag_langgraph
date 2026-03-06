@@ -52,15 +52,21 @@ class ChatInterface:
                         streamed_response += f"*{thought_maps[node_name]}*\n\n"
                         yield streamed_response
                 
-                # Intercept the Final LLM Output Tokens (if the final node is aggregating or fast replying)
+                # Intercept the Final LLM Output Tokens
                 elif kind == "on_chat_model_stream":
-                    # Only yield raw chunks if they belong to the final aggregation/fast-path node
-                    # We don't want to stream the raw internal queries from the orchestrator.
-                    if "aggregate_answers" in tags or "fast_reply" in tags:
+                    if "aggregate_answers" in tags:
                         chunk = event["data"]["chunk"].content
                         if chunk:
                             streamed_response += chunk
                             yield streamed_response
+                            
+                # Intercept static outputs that don't call an LLM (Fast Path)
+                elif kind == "on_chain_end" and event.get("name") == "fast_reply":
+                    output = event.get("data", {}).get("output", {})
+                    if "messages" in output and output["messages"]:
+                        chunk = output["messages"][-1].content
+                        streamed_response += chunk
+                        yield streamed_response
             
             logger.info("Chat stream completed successfully.")
             

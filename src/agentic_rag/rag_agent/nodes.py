@@ -281,7 +281,7 @@ def collect_answer(state: AgentState):
 
 # --- Post-processing Nodes ---
 
-def aggregate_answers(state: State, llm):
+async def aggregate_answers(state: State, llm):
     """
     Final Synthesis Node (Map-Reduce Join).
     
@@ -298,6 +298,6 @@ def aggregate_answers(state: State, llm):
         formatted_answers += (f"\nAnswer {i}:\n"f"{ans['answer']}\n")
 
     user_message = HumanMessage(content=f"""Original user question: {state["originalQuery"]}\nRetrieved answers:{formatted_answers}""")
-    synthesis_response = llm.invoke([SystemMessage(content=get_aggregation_prompt()), user_message])
+    synthesis_response = await llm.with_config(tags=["aggregate_answers"]).ainvoke([SystemMessage(content=get_aggregation_prompt()), user_message])
     
     return {"messages": [AIMessage(content=synthesis_response.content)]}
