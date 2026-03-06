@@ -13,22 +13,19 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
-    software-properties-common \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy pyproject.toml and requirements.txt (if exists)
-COPY pyproject.toml requirements.txt* ./
+# Copy requirements.txt first for caching
+COPY requirements.txt ./
 
 # Install Python dependencies
-# We use requirements.txt if generated, otherwise fall back to pip install .
-RUN if [ -f requirements.txt ]; then \
-        pip install --no-cache-dir -r requirements.txt; \
-    else \
-        pip install --no-cache-dir .; \
-    fi
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application
+# Copy the rest of the application (including pyproject.toml and src/)
 COPY . .
+
+# Install the package itself in editable mode or just its entry points
+RUN pip install --no-cache-dir -e .
 
 # Expose the port Gradio runs on
 EXPOSE 7860

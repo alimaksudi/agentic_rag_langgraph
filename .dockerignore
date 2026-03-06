@@ -18,6 +18,5 @@ tests/
 *.egg-info
 dist/
 build/
-requirements.txt
-pyproject.toml
+!requirements.txt
 !pyproject.toml

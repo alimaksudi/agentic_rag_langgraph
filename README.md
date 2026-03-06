@@ -14,13 +14,17 @@ A state-of-the-art **Agentic Retrieval-Augmented Generation (RAG)** system built
 ## 🚀 Key Innovations
 
 ### 1. SOTA Retrieval Architecture
+
 Standard RAG fails on technical nuances. We solve this with a multi-stage pipeline:
+
 - **Hybrid Dense-Sparse Search**: Combines the semantic "vibe" of Dense embeddings with the surgical keyword precision of BM25.
 - **Cross-Encoder Re-ranking**: Every retrieved chunk is validated by a secondary "Judge" model (`ms-marco-MiniLM`), virtually eliminating hallucinations.
 - **Parent-Child Indexing**: Searches small chunks for precision, but feeds the LLM full thematic context (Parent blocks) for understanding.
 
 ### 2. Autonomous Agent Logic (LangGraph)
+
 The system isn't just a list of steps; it's a **living graph** that:
+
 - **Fast-Path Routing**: Instantly recognizes conversational filler (e.g., "Hi") and bypasses the expensive research loop.
 - **Recursive Decomposition**: Breaks complex user questions into atomic sub-tasks handled in parallel.
 - **Self-Correction**: Automatically detects if it lacks info and triggers recursive searches until the threshold is met.
@@ -30,6 +34,7 @@ The system isn't just a list of steps; it's a **living graph** that:
 ## 🏗️ System Architecture
 
 ### Agentic Decision Flow
+
 The following diagram visualizes the agent's reasoning process, including the "Fast-Path" bypass and the "Research Loop":
 
 ```mermaid
@@ -61,7 +66,9 @@ graph TD;
 ## 🛠️ Installation & Setup
 
 ### Option A: The "Instant" Way (Docker)
+
 Ensure you have Docker and Docker Compose installed.
+
 ```bash
 # 1. Clone & Enter
 git clone https://github.com/your-username/agentic-rag-assistant.git
@@ -73,9 +80,11 @@ cp .env.example .env
 # 3. Launch everything (App + Qdrant)
 docker-compose up --build
 ```
+
 *App will be live at `http://localhost:7860`.*
 
 ### Option B: The Developer Way (Local)
+
 ```bash
 # 1. Install dependencies
 pip install -e "."
@@ -97,7 +106,7 @@ mypy src/agentic_rag
 The system is fully controlled via `.env`. Key production settings:
 
 | Variable | Strategy | Default |
-|----------|----------|---------|
+| :--- | :--- | :--- |
 | `ACTIVE_LLM_CONFIG` | Switch Provider (`ollama`, `openai`, `anthropic`, `google`) | `ollama` |
 | `MAX_TOOL_CALLS` | Cap on recursive research depth | `8` |
 | `BASE_TOKEN_THRESHOLD` | When to trigger semantic context compression | `2000` |
@@ -106,6 +115,7 @@ The system is fully controlled via `.env`. Key production settings:
 ---
 
 ## 🛡️ Enterprise Design Principles
+
 - **SOLID Execution**: Decoupled infrastructure via `AbstractVectorDB` and `AbstractParentStore` interfaces.
 - **Type Safety**: 100% Mypy strict compliance.
 - **Modular Data Engineering**: Isolated indexing logic specialized for Markdown/PDF structure.
@@ -114,4 +124,5 @@ The system is fully controlled via `.env`. Key production settings:
 ---
 
 ## 📄 License
+
 Distributed under the MIT License. See `LICENSE` for more information.
