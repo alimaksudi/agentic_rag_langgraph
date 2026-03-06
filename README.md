@@ -1,147 +1,117 @@
-# Agentic RAG Assistant
+# 🧠 Agentic RAG Assistant: Enterprise-Grade Document Intelligence
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-1.0%2B-orange?logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraph)
+[![LangGraph](https://img.shields.io/badge/LangGraph-2.0-orange?logo=langchain&logoColor=white)](https://github.com/langchain-ai/langgraph)
 [![Qdrant](https://img.shields.io/badge/Qdrant-vector%20db-DC244C)](https://qdrant.tech/)
+[![Test Coverage](https://img.shields.io/badge/Tests-Pytest%20|%20Mypy-green)](tests/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker&logoColor=white)](docker-compose.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-A professional-grade **Agentic Retrieval-Augmented Generation (RAG)** system built with LangGraph. This project implements a modular, self-correcting research pipeline designed for high-precision document intelligence.
+A state-of-the-art **Agentic Retrieval-Augmented Generation (RAG)** system built with **LangGraph**. This project implements a self-correcting, multi-agent research pipeline designed for high-precision document intelligence at scale.
 
-## Table of Contents
-- [Overview](#overview)
-- [System Architecture](#system-architecture)
-- [Key Features](#key-features)
-- [Installation & Setup](#installation--setup)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Testing](#testing)
-- [Contributing](#contributing)
-- [License](#license)
+---
 
-## Overview
+## 🚀 Key Innovations
 
-Traditional RAG systems often suffer from the "context vs. precision" trade-off and fail gracefully when queries are ambiguous. This project addresses these limitations by introducing an **Agentic Loop** with sophisticated state management, recursive research capabilities, and human-in-the-loop guardrails.
+### 1. SOTA Retrieval Architecture
+Standard RAG fails on technical nuances. We solve this with a multi-stage pipeline:
+- **Hybrid Dense-Sparse Search**: Combines the semantic "vibe" of Dense embeddings with the surgical keyword precision of BM25.
+- **Cross-Encoder Re-ranking**: Every retrieved chunk is validated by a secondary "Judge" model (`ms-marco-MiniLM`), virtually eliminating hallucinations.
+- **Parent-Child Indexing**: Searches small chunks for precision, but feeds the LLM full thematic context (Parent blocks) for understanding.
 
-## System Architecture
+### 2. Autonomous Agent Logic (LangGraph)
+The system isn't just a list of steps; it's a **living graph** that:
+- **Fast-Path Routing**: Instantly recognizes conversational filler (e.g., "Hi") and bypasses the expensive research loop.
+- **Recursive Decomposition**: Breaks complex user questions into atomic sub-tasks handled in parallel.
+- **Self-Correction**: Automatically detects if it lacks info and triggers recursive searches until the threshold is met.
 
-Designed for robustness and scalability, the architecture adheres to SOLID principles, utilizing Dependency Injection and explicit interface abstraction.
+---
+
+## 🏗️ System Architecture
+
+### Agentic Decision Flow
+The following diagram visualizes the agent's reasoning process, including the "Fast-Path" bypass and the "Research Loop":
 
 ```mermaid
 graph TD;
-    User[User Query] --> UI[Gradio Interface];
-    UI --> Orchestrator[LangGraph Agent];
+    User[User Input] --> Intent{Intent Classifier};
     
-    subgraph "Reasoning Engine (Orchestrator)"
-    Orchestrator --> Rewrite[Query Rewrite & De-reference];
-    Rewrite --> Search[Vector Search Tool];
-    Search --> Compress[Context Compression];
-    Compress --> Fallback[Fallback Guardrail];
+    Intent -->|Chat/Simple| FastPath[Fast Reply];
+    Intent -->|Technical/Research| Rewrite[Parallel Query Expansion];
+    
+    subgraph "Research Subgraph"
+    Rewrite --> Search[Hybrid Search: Dense + BM25];
+    Search --> Rerank[Cross-Encoder Re-ranking];
+    Rerank --> Threshold{Is Context Sufficient?};
+    Threshold -->|No| Rewrite;
+    Threshold -->|Yes| Synthesis[Answer Synthesis];
     end
     
-    subgraph "Data & Storage Layer (Injected Dependencies)"
-    Search --> Qdrant[(Qdrant: Child Vectors)];
-    Search --> ParentStore[(Cold Storage: Parent Chunks)];
+    FastPath --> Output[User Response];
+    Synthesis --> Output;
+    
+    subgraph "Data Layer"
+    Search -.-> Qdrant[(Qdrant: Child Vectors)];
+    Search -.-> Parent[(Disk: Parent Store)];
     end
-    
-    Orchestrator --> Synthesis[Final Answer Synthesis];
-    Synthesis --> UI;
-    
-    Rewrite -.-> Ambiguous{Is Ambiguous?};
-    Ambiguous -->|Yes| Clarification[Request Human Clarification];
-    Clarification -.-> UI;
 ```
-
-### 1. Hierarchical Indexing Strategy
-To solve the "context vs. precision" trade-off, we employ a **Parent-Child Retrieval** pattern:
-- **Child Vectorization**: Small, semantically dense chunks (e.g., 500 tokens) are used for high-precision vector search.
-- **Parent Context**: Upon discovery, the system retrieves the full structural parent block (e.g., 2000-4000 tokens) to provide the LLM with complete thematic context, significantly reducing hallucinations.
-
-### 2. Intelligent Reasoning Graph
-The agent workflow is organized as a state-aware graph:
-- **Query De-referencing & Expansion**: Analyzes conversation history to resolve pronouns and break complex queries into atomic, parallel research tasks.
-- **Context Compression (Memory Management)**: Automatically summarizes intermediate tool results into a compact "Research Memory" when token thresholds are reached, allowing for deep, recursive research cycles without context overflow.
-- **Human-in-the-Loop Integrated**: Detects ambiguous queries and pauses for user clarification before burning compute resources.
-- **Self-Correction & Fallbacks**: Monitors its own progress; if time or token budgets are exceeded, it triggers a "Best Effort" synthesis of available data rather than failing.
-
-## Key Features
-
-- **Multi-Cloud/Local LLM Support**: Native adapters for **Ollama**, **OpenAI**, **Anthropic**, and **Google Gemini**.
-- **Hybrid Search**: Combines Dense embeddings (Semantic) and Sparse embeddings (BM25) via Qdrant for superior retrieval performance.
-- **Enterprise Design Patterns**: Employs Dependency Injection, Abstract Base Classes, and Custom Exception hierarchies for robust error handling.
-- **Advanced UI**: Includes a polished Gradio interface for real-time document indexing and multi-agent chat.
-- **Production-Ready Core**: Centered around centralized logging (Loguru), type safety (Pydantic), and environment-driven configuration.
-
-## Installation & Setup
-
-### 1. Prerequisites
-- **Python:** 3.10 or higher.
-- **Vector Database:** Qdrant (Runs locally by default via `qdrant-client`).
-- **LLM Engine:** [Ollama](https://ollama.com/) (Required if running the default local LLM configuration).
-
-### 2. Quick Start
-
-Clone the repository and enter the directory:
-```bash
-git clone https://github.com/your-username/agentic-rag-assistant.git
-cd agentic-rag-assistant
-```
-
-Install the package in development mode:
-```bash
-pip install -e .
-```
-
-Configure your environment variables:
-```bash
-cp .env.example .env
-# Edit .env and supply your API keys or configure your local LLM settings.
-```
-
-## Usage
-
-Launch the Gradio user interface:
-```bash
-python src/agentic_rag/app.py
-```
-This will start a local server (typically at `http://127.0.0.1:7860`). Open this URL in your browser to access the Document Management and Chat interfaces.
-
-## Configuration
-
-System behavior is managed through the `.env` file or direct environment variables. Key parameters include:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ACTIVE_LLM_CONFIG` | LLM Provider (`ollama`, `openai`, `anthropic`, `google`) | `ollama` |
-| `LLM_MODEL` | Target Model ID | `qwen3:4b-instruct-2507-q4_K_M` |
-| `MAX_TOOL_CALLS` | Safety cap for recursive research loops | `8` |
-| `BASE_TOKEN_THRESHOLD` | Token limit before semantic context compression | `2000` |
-
-## Testing
-
-The project includes a comprehensive suite of unit tests to ensure architectural stability.
-
-```bash
-# Install test dependencies
-pip install -e ".[test]"
-
-# Run all tests
-pytest tests/
-```
-
-## Contributing
-
-Contributions are welcome! Please follow these steps:
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Ensure all tests pass (`pytest tests/`).
-4. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-5. Push to the branch (`git push origin feature/AmazingFeature`).
-6. Open a Pull Request.
-
-*Note: Please ensure new code adheres to the project's dependency injection patterns and uses the custom exception hierarchy.*
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
+
+## 🛠️ Installation & Setup
+
+### Option A: The "Instant" Way (Docker)
+Ensure you have Docker and Docker Compose installed.
+```bash
+# 1. Clone & Enter
+git clone https://github.com/your-username/agentic-rag-assistant.git
+cd agentic-rag-assistant
+
+# 2. Configure (supply your API keys)
+cp .env.example .env
+
+# 3. Launch everything (App + Qdrant)
+docker-compose up --build
+```
+*App will be live at `http://localhost:7860`.*
+
+### Option B: The Developer Way (Local)
+```bash
+# 1. Install dependencies
+pip install -e "."
+
+# 2. Setup Qdrant & Ollama
+# Ensure Qdrant is running (default: http://localhost:6333)
+# Ensure Ollama is running (default: http://localhost:11434)
+
+# 3. Running Tests & Linting
+pip install -e ".[test]"
+pytest tests/
+mypy src/agentic_rag
+```
+
+---
+
+## ⚙️ Configuration Matrix
+
+The system is fully controlled via `.env`. Key production settings:
+
+| Variable | Strategy | Default |
+|----------|----------|---------|
+| `ACTIVE_LLM_CONFIG` | Switch Provider (`ollama`, `openai`, `anthropic`, `google`) | `ollama` |
+| `MAX_TOOL_CALLS` | Cap on recursive research depth | `8` |
+| `BASE_TOKEN_THRESHOLD` | When to trigger semantic context compression | `2000` |
+| `QDRANT_URL` | Remote DB connection (Cloud/Docker) | `None` (Local) |
+
+---
+
+## 🛡️ Enterprise Design Principles
+- **SOLID Execution**: Decoupled infrastructure via `AbstractVectorDB` and `AbstractParentStore` interfaces.
+- **Type Safety**: 100% Mypy strict compliance.
+- **Modular Data Engineering**: Isolated indexing logic specialized for Markdown/PDF structure.
+- **Observability**: Real-time reasoning streaming via LangGraph intermediate events.
+
+---
+
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.
