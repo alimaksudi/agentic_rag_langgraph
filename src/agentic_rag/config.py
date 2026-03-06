@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # --- Model Configuration ---
     DENSE_MODEL: str = "sentence-transformers/all-mpnet-base-v2"
     SPARSE_MODEL: str = "Qdrant/bm25"
+    RERANKER_MODEL: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
     LLM_MODEL: str = "qwen3:4b-instruct-2507-q4_K_M"
     LLM_TEMPERATURE: float = 0.0
 

@@ -6,10 +6,11 @@ from agentic_rag.db.parent_store_manager import ParentStoreManager
 
 class ToolFactory:
     
-    def __init__(self, collection: Any):
+    def __init__(self, collection: Any, reranker: Any = None):
         self.collection = collection
+        self.reranker = reranker
         self.parent_store_manager = ParentStoreManager()
-        logger.debug("ToolFactory initialized.")
+        logger.debug("ToolFactory initialized with re-ranker.")
     
     def _search_child_chunks(self, query: str, limit: int) -> str:
         """Search for the top K most relevant child chunks.
@@ -19,9 +20,27 @@ class ToolFactory:
             limit: Maximum number of results to return
         """
         try:
-            results = self.collection.similarity_search(query, k=limit, score_threshold=0.7)
+            # Stage 1: Broad Hybrid Search Extraction
+            # We pull an expanded candidate pool (e.g. 20) to ensure high recall
+            expanded_limit = limit * 4
+            results = self.collection.similarity_search(query, k=expanded_limit, score_threshold=0.6)
             if not results:
                 return "NO_RELEVANT_CHUNKS"
+
+            # Stage 2: Cross-Encoder Precision Re-Ranking
+            if self.reranker:
+                # Pair the original query with each chunk's content for the cross-encoder
+                sentence_pairs = [[query, doc.page_content] for doc in results]
+                scores = self.reranker.predict(sentence_pairs)
+                
+                # Zip the scores with the documents and sort descending
+                scored_docs = list(zip(scores, results))
+                scored_docs.sort(key=lambda x: x[0], reverse=True)
+                
+                # Extract the top K documents after re-ranking
+                results = [doc for score, doc in scored_docs[:limit]]
+            else:
+                results = results[:limit]
 
             return "\n\n".join([
                 f"Parent ID: {doc.metadata.get('parent_id', '')}\n"

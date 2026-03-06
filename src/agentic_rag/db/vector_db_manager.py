@@ -6,6 +6,7 @@ from langchain_qdrant import QdrantVectorStore
 from langchain_qdrant.qdrant import RetrievalMode
 from loguru import logger
 import os
+from typing import Any
 
 from agentic_rag.config import settings
 from agentic_rag.interfaces import AbstractVectorDB
@@ -31,11 +32,15 @@ class VectorDbManager(AbstractVectorDB):
         self.dense_embeddings = HuggingFaceEmbeddings(model_name=settings.DENSE_MODEL)
         self.sparse_embeddings = FastEmbedSparse(model_name=settings.SPARSE_MODEL)
         
+        from sentence_transformers import CrossEncoder
+        logger.info(f"Loading Cross-Encoder Re-ranker: {settings.RERANKER_MODEL}...")
+        self.reranker = CrossEncoder(settings.RERANKER_MODEL)
+        
         # Storage Layer
         self.client = QdrantClient(path=db_path)
         self.__sparse_name = settings.SPARSE_VECTOR_NAME
         
-        logger.debug("Embeddings engines loaded successfully.")
+        logger.debug("Embeddings engines and Re-ranker loaded successfully.")
 
     def create_collection(self, collection_name: str) -> None:
         """
@@ -81,3 +86,7 @@ class VectorDbManager(AbstractVectorDB):
             retrieval_mode=RetrievalMode.HYBRID,
             sparse_vector_name=self.__sparse_name
         )
+
+    def get_reranker(self) -> Any:
+        """Returns the initialized Cross-Encoder for chunk re-scoring."""
+        return self.reranker

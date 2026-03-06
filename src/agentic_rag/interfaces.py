@@ -31,6 +31,11 @@ class AbstractVectorDB(ABC):
         """Return a LangChain-compatible VectorStore interface."""
         pass
 
+    @abstractmethod
+    def get_reranker(self) -> Any:
+        """Return a Cross-Encoder or similar re-ranking model."""
+        pass
+
 class AbstractParentStore(ABC):
     """
     Contract for the Parent Document Cold Storage.
