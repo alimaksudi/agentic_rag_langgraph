@@ -14,6 +14,9 @@ dependencies = [
     "langchain-community",
     "langchain-huggingface",
     "langchain-ollama",
+    "langchain-openai",
+    "langchain-anthropic",
+    "langchain-google-genai",
     "langchain-qdrant",
     "langchain-text-splitters",
     "langgraph",
@@ -21,11 +24,21 @@ dependencies = [
     "pymupdf4llm",
     "gradio",
     "loguru",
-    "pydantic-settings"
+    "pydantic-settings",
+    "pydantic>=2.0.0",
+    "sentence-transformers",
+    "rank-bm25",
+    "typeguard",
+    "tiktoken"
 ]
 
 [project.optional-dependencies]
-test = ["pytest"]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "mypy",
+    "types-PyYAML"
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
