@@ -206,4 +206,4 @@ def create_gradio_ui() -> gr.Blocks:
     
     # Store theme for app.py to pass into launch()
     demo.theme_override = custom_theme
-    return demo
+    return demo  # type: ignore

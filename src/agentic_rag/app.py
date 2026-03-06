@@ -13,13 +13,14 @@ def main():
     logger.remove()
     logger.add(sys.stderr, format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>", level="INFO")
     
+    from typing import Dict, Any
     try:
         demo = create_gradio_ui()
         logger.info("Launching RAG Assistant UI...")
         
-        launch_kwargs = {"css": custom_css}
+        launch_kwargs: Dict[str, Any] = {"css": custom_css}
         if hasattr(demo, "theme_override"):
-            launch_kwargs["theme"] = demo.theme_override
+            launch_kwargs["theme"] = getattr(demo, "theme_override")
             
         demo.launch(**launch_kwargs)
     except Exception as e:

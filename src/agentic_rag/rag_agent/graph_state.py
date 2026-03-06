@@ -18,15 +18,15 @@ class State(MessagesState):
     conversation_summary: str = ""
     originalQuery: str = "" 
     rewrittenQuestions: List[str] = []
-    agent_answers: Annotated[List[dict], accumulate_or_reset] = []
+    agent_answers: Annotated[List[dict], accumulate_or_reset]
 
 class AgentState(MessagesState):
     """State for individual agent subgraph"""
     question: str = ""
     question_index: int = 0
     context_summary: str = ""
-    retrieval_keys: Annotated[Set[str], set_union] = set()
-    final_answer: str = ""
-    agent_answers: List[dict] = []
-    tool_call_count: Annotated[int, operator.add] = 0
-    iteration_count: Annotated[int, operator.add] = 0
+    retrieval_keys: Annotated[Set[str], set_union]
+    final_answer: str
+    agent_answers: List[dict]
+    tool_call_count: Annotated[int, operator.add]
+    iteration_count: Annotated[int, operator.add]

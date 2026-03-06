@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, List, Union
 from langgraph.types import Send
 from .graph_state import State, AgentState
 from agentic_rag.config import settings
@@ -39,7 +39,7 @@ def route_after_intent(state: State) -> Literal["fast_reply", "summarize_history
     return "summarize_history"
 
 
-def route_after_rewrite(state: State) -> Literal["request_clarification", "agent"]:
+def route_after_rewrite(state: State) -> Union[Literal["request_clarification"], List[Send]]:
     """
     Strategic Workflow Router.
     

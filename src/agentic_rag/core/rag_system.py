@@ -80,10 +80,10 @@ class RAGSystem:
             )
         elif provider == "openai":
             from langchain_openai import ChatOpenAI
-            return ChatOpenAI(model=model, temperature=temp, api_key=settings.OPENAI_API_KEY)
+            return ChatOpenAI(model=model, temperature=temp, api_key=settings.OPENAI_API_KEY)  # type: ignore
         elif provider == "anthropic":
             from langchain_anthropic import ChatAnthropic
-            return ChatAnthropic(model=model, temperature=temp, api_key=settings.ANTHROPIC_API_KEY)
+            return ChatAnthropic(model_name=model, temperature=temp, api_key=settings.ANTHROPIC_API_KEY)
         elif provider == "google":
             from langchain_google_genai import ChatGoogleGenerativeAI
             return ChatGoogleGenerativeAI(model=model, temperature=temp, google_api_key=settings.GOOGLE_API_KEY)
@@ -103,7 +103,8 @@ class RAGSystem:
             
             # Agent Compilation
             llm = self._initialize_llm()
-            tools = ToolFactory(collection).create_tools()
+            reranker = self.vector_db.get_reranker()
+            tools = ToolFactory(collection, reranker).create_tools()
             self.agent_graph = create_agent_graph(llm, tools)
             
             logger.info("RAGSystem successfully initialized and graph compiled.")
