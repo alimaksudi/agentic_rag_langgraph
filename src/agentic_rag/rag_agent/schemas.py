@@ -20,3 +20,8 @@ class QueryAnalysis(BaseModel):
     clarification_needed: str = Field(
         description="Explanation if the question is unclear."
     )
+
+class DocumentGrader(BaseModel):
+    binary_score: Literal["yes", "no"] = Field(
+        description="Indicates if the document provides information relevant to the user question."
+    )

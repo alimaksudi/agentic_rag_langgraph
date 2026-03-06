@@ -7,8 +7,10 @@ from loguru import logger
 from .graph_state import State, AgentState
 from .nodes import orchestrator, compress_context, fallback_response, \
     should_compress_context, collect_answer, summarize_history, rewrite_query, \
-    request_clarification, aggregate_answers, classify_intent, fast_reply
-from .edges import route_after_orchestrator_call, route_after_rewrite, route_after_intent
+    request_clarification, aggregate_answers, classify_intent, fast_reply, \
+    grade_documents, fail_response
+from .edges import route_after_orchestrator_call, route_after_rewrite, route_after_intent, \
+    decide_to_generate
 
 def create_agent_graph(llm, tools_list):
     """
@@ -41,6 +43,8 @@ def create_agent_graph(llm, tools_list):
     agent_builder.add_node("tools", tool_node)
     agent_builder.add_node("compress_context", partial(compress_context, llm=llm))
     agent_builder.add_node("fallback_response", partial(fallback_response, llm=llm))
+    agent_builder.add_node("grade_documents", partial(grade_documents, llm=llm))
+    agent_builder.add_node("fail_response", fail_response)
     agent_builder.add_node(should_compress_context) 
     agent_builder.add_node(collect_answer)
     
@@ -49,11 +53,20 @@ def create_agent_graph(llm, tools_list):
     agent_builder.add_conditional_edges(
         "orchestrator", 
         route_after_orchestrator_call, 
-        {"tools": "tools", "fallback_response": "fallback_response", "collect_answer": "collect_answer"}
+        {"tools": "tools", "fallback_response": "grade_documents", "collect_answer": "grade_documents"}
     )
     agent_builder.add_edge("tools", "should_compress_context")
     agent_builder.add_edge("compress_context", "orchestrator")
-    agent_builder.add_edge("fallback_response", "collect_answer")
+    
+    # CRAG Decision Logic
+    agent_builder.add_edge("fallback_response", "grade_documents")
+    agent_builder.add_conditional_edges(
+        "grade_documents",
+        decide_to_generate,
+        {"collect_answer": "collect_answer", "fail_response": "fail_response"}
+    )
+    
+    agent_builder.add_edge("fail_response", END)
     agent_builder.add_edge("collect_answer", END)
     
     agent_subgraph = agent_builder.compile()

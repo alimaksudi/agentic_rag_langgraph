@@ -25,6 +25,7 @@ class AgentState(MessagesState):
     question: str = ""
     question_index: int = 0
     context_summary: str = ""
+    is_relevant: bool = True
     retrieval_keys: Annotated[Set[str], set_union]
     final_answer: str
     agent_answers: List[dict]

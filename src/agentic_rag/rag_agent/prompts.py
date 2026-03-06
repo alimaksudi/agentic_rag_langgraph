@@ -195,3 +195,10 @@ Sources section rules:
 
 If there's no useful information available, simply say: "I couldn't find any information to answer your question in the available sources."
 """
+
+def get_grader_prompt() -> str:
+    return """You are a grader assessing relevance of a retrieved document to a user question. 
+If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. 
+It does not need to be a perfect answer and can be partial information.
+Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+"""

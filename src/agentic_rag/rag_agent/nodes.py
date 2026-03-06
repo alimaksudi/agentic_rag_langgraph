@@ -3,7 +3,7 @@ from loguru import logger
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage, AIMessage, ToolMessage
 from langgraph.types import Command
 from agentic_rag.rag_agent.graph_state import State, AgentState
-from agentic_rag.rag_agent.schemas import QueryAnalysis, IntentClassification
+from agentic_rag.rag_agent.schemas import QueryAnalysis, IntentClassification, DocumentGrader
 from agentic_rag.rag_agent.prompts import (
     get_intent_classifier_prompt,
     get_conversation_summary_prompt,
@@ -12,6 +12,7 @@ from agentic_rag.rag_agent.prompts import (
     get_fallback_response_prompt,
     get_context_compression_prompt,
     get_aggregation_prompt,
+    get_grader_prompt,
 )
 from agentic_rag.utils import estimate_context_tokens
 from agentic_rag.config import settings
@@ -275,6 +276,55 @@ def compress_context(state: AgentState, llm):
 
     # Clean the slate: Remove intermediate messages to save tokens
     return {"context_summary": new_summary, "messages": [RemoveMessage(id=m.id) for m in messages[1:]]}
+
+async def grade_documents(state: AgentState, llm):
+    """
+    Corrective RAG (CRAG) Relevance Assessment.
+    
+    Logic:
+    1. Extracts all ToolMessages (search results).
+    2. Uses a fast LLM pass to grade each chunk as 'yes' (relevant) or 'no' (irrelevant).
+    3. If any chunks are relevant, synthesis proceeds.
+    4. If ZERO chunks are relevant, marks search as a failure.
+    """
+    messages = state["messages"]
+    question = state["question"]
+    
+    # Filter for tool result messages
+    tool_messages = [msg for msg in messages if isinstance(msg, ToolMessage)]
+    
+    if not tool_messages:
+        return {"is_relevant": False}
+
+    llm_with_structure = llm.with_config(temperature=0.0).with_structured_output(DocumentGrader)
+    
+    # Perform parallel grading requests
+    grading_tasks = [
+        llm_with_structure.ainvoke([
+            SystemMessage(content=get_grader_prompt()),
+            HumanMessage(content=f"Question: {question}\n\nDocument Chunk: {msg.content}")
+        ])
+        for msg in tool_messages
+    ]
+    
+    import asyncio
+    results = await asyncio.gather(*grading_tasks)
+    
+    significant_matches = [res for res in results if res.binary_score == "yes"]
+    
+    if not significant_matches:
+        logger.warning(f"CRAG: No relevant documents found for query: {question}")
+        return {"is_relevant": False}
+    
+    logger.info(f"CRAG: Found {len(significant_matches)} relevant chunks.")
+    return {"is_relevant": True}
+
+def fail_response(state: AgentState):
+    """
+    Graceful handling of irrelevant search results.
+    """
+    msg = f"I'm sorry, but I couldn't find any information in the available documents to accurately answer your question: '{state['question']}'."
+    return {"messages": [AIMessage(content=msg)]}
 
 def collect_answer(state: AgentState):
     """Post-Retrieval Data Unification."""

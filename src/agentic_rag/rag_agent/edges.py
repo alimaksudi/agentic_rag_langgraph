@@ -29,6 +29,17 @@ def route_after_orchestrator_call(state: AgentState) -> Literal["tools", "fallba
         
     return "collect_answer"
 
+def decide_to_generate(state: AgentState) -> Literal["collect_answer", "fail_response"]:
+    """
+    CRAG Decision Logic.
+    
+    If no relevant documents were found during the grading phase, 
+    route to 'fail_response' to say "I don't know".
+    """
+    if not state.get("is_relevant", True):
+        return "fail_response"
+    return "collect_answer"
+
 def route_after_intent(state: State) -> Literal["fast_reply", "summarize_history"]:
     """
     Zero-Shot Bypass Router.
