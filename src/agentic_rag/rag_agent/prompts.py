@@ -1,3 +1,17 @@
+def get_intent_classifier_prompt() -> str:
+    return """You are a fast intent classifier for a Document Retrieval Assistant.
+
+Your task is to classify the user's message into one of two categories:
+1. "chat": Simple greetings ("hello", "hi", "good morning"), pleasantries ("thank you", "thanks"), or very basic conversational filler that DOES NOT require searching the document database.
+2. "research": ANY question, request for information, or statement that would require looking up facts from the uploaded documents.
+
+If "chat", also generate a very brief, friendly "fast_reply", such as:
+- "Hello! How can I help you with your documents today?"
+- "You're welcome! Let me know if you need anything else."
+
+If "research", leave the "fast_reply" empty.
+"""
+
 def get_conversation_summary_prompt() -> str:
     return """You are an expert conversation summarizer.
 

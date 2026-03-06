@@ -10,28 +10,64 @@ class ChatInterface:
     def __init__(self, rag_system):
         self.rag_system = rag_system
         
-    def chat(self, message: str, history: List[Any]) -> str:
+    async def chat_stream(self, message: str, history: List[Any]):
         """
-        Sends a message to the RAG agent and returns the final response.
+        Sends an asynchronous, streaming message to the RAG Agent.
+        Yields progressive 'thought' steps followed by the final answer.
         """
         if not self.rag_system.agent_graph:
             logger.warning("Attempted to chat, but system is not initialized.")
-            return "System not initialized!"
+            yield "System not initialized!"
+            return
             
         try:
-            logger.debug(f"Chat message received: {message}")
-            result = self.rag_system.agent_graph.invoke(
+            logger.debug(f"Chat stream initiated: {message}")
+            
+            # The running string we will continuously yield to Gradio
+            streamed_response = ""
+            
+            # Use LangGraph's async stream events (version V2 required)
+            events = self.rag_system.agent_graph.astream_events(
                 {"messages": [HumanMessage(content=message.strip())]},
-                self.rag_system.get_config()
+                config=self.rag_system.get_config(),
+                version="v2"
             )
-            response = result["messages"][-1].content
-            logger.info("Chat response generated successfully.")
-            return response
+            
+            async for event in events:
+                kind = event["event"]
+                tags = event.get("tags", [])
+                
+                # Intercept Node Entry (Agent Thoughts)
+                if kind == "on_chain_start" and event.get("name") in ["classify_intent", "rewrite_query", "orchestrator", "compress_context", "aggregate_answers", "fast_reply"]:
+                    node_name = event["name"]
+                    thought_maps = {
+                        "classify_intent": "🧠 Analyzing intent...",
+                        "rewrite_query": "✍️ Formulating optimal search queries...",
+                        "orchestrator": "🔍 Searching semantic knowledge base...",
+                        "compress_context": "🗜️ Compressing retrieved research...",
+                        "aggregate_answers": "✨ Synthesizing final response...",
+                        "fast_reply": "💬 Generating conversational reply..."
+                    }
+                    if node_name in thought_maps:
+                        streamed_response += f"*{thought_maps[node_name]}*\n\n"
+                        yield streamed_response
+                
+                # Intercept the Final LLM Output Tokens (if the final node is aggregating or fast replying)
+                elif kind == "on_chat_model_stream":
+                    # Only yield raw chunks if they belong to the final aggregation/fast-path node
+                    # We don't want to stream the raw internal queries from the orchestrator.
+                    if "aggregate_answers" in tags or "fast_reply" in tags:
+                        chunk = event["data"]["chunk"].content
+                        if chunk:
+                            streamed_response += chunk
+                            yield streamed_response
+            
+            logger.info("Chat stream completed successfully.")
             
         except Exception as e:
             from agentic_rag.exceptions import AgentExecutionError
             logger.error(f"Chat interaction failed: {e}")
-            raise AgentExecutionError(f"Failed to generate response: {e}") from e
+            yield f"**Service Error**: The agent encountered an issue processing your request."
     
     def clear_session(self):
         self.rag_system.reset_thread()

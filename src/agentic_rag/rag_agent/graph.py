@@ -7,8 +7,8 @@ from loguru import logger
 from .graph_state import State, AgentState
 from .nodes import orchestrator, compress_context, fallback_response, \
     should_compress_context, collect_answer, summarize_history, rewrite_query, \
-    request_clarification, aggregate_answers
-from .edges import route_after_orchestrator_call, route_after_rewrite
+    request_clarification, aggregate_answers, classify_intent, fast_reply
+from .edges import route_after_orchestrator_call, route_after_rewrite, route_after_intent
 
 def create_agent_graph(llm, tools_list):
     """
@@ -64,14 +64,18 @@ def create_agent_graph(llm, tools_list):
     graph_builder = StateGraph(State)
     
     # Nodes: Lifecycle Stages
+    graph_builder.add_node("classify_intent", partial(classify_intent, llm=llm))
+    graph_builder.add_node("fast_reply", fast_reply)
     graph_builder.add_node("summarize_history", partial(summarize_history, llm=llm))
     graph_builder.add_node("rewrite_query", partial(rewrite_query, llm=llm))
     graph_builder.add_node(request_clarification)
     graph_builder.add_node("agent", agent_subgraph)
     graph_builder.add_node("aggregate_answers", partial(aggregate_answers, llm=llm))
     
-    # Control Flow: Linear Transformation -> Parallel Fan-out -> Aggregation
-    graph_builder.add_edge(START, "summarize_history")
+    # Control Flow: Zero-Shot Intent -> Linear Transformation -> Parallel Fan-out -> Aggregation
+    graph_builder.add_edge(START, "classify_intent")
+    graph_builder.add_conditional_edges("classify_intent", route_after_intent)
+    graph_builder.add_edge("fast_reply", END)
     graph_builder.add_edge("summarize_history", "rewrite_query")
     graph_builder.add_conditional_edges("rewrite_query", route_after_rewrite)
     graph_builder.add_edge("request_clarification", "rewrite_query")

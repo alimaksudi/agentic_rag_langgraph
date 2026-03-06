@@ -3,12 +3,37 @@ from loguru import logger
 from langchain_core.messages import SystemMessage, HumanMessage, RemoveMessage, AIMessage, ToolMessage
 from langgraph.types import Command
 from agentic_rag.rag_agent.graph_state import State, AgentState
-from agentic_rag.rag_agent.schemas import QueryAnalysis
+from agentic_rag.rag_agent.schemas import QueryAnalysis, IntentClassification
 from agentic_rag.rag_agent.prompts import *
 from agentic_rag.utils import estimate_context_tokens
 from agentic_rag.config import settings
 
 # --- Pre-processing Nodes ---
+
+def classify_intent(state: State, llm):
+    """
+    Fast-Path zero-shot classifier.
+    Bypasses deep research loops for simple pleasantries to save tokens and time.
+    """
+    last_message = state["messages"][-1].content
+    
+    llm_with_structure = llm.with_config(temperature=0.0).with_structured_output(IntentClassification)
+    response = llm_with_structure.invoke([
+        SystemMessage(content=get_intent_classifier_prompt()), 
+        HumanMessage(content=last_message)
+    ])
+    
+    return {
+        "intent_type": response.intent_type,
+        "fast_reply_msg": response.fast_reply
+    }
+
+def fast_reply(state: State):
+    """
+    Immediate return node for non-research queries.
+    """
+    reply = state.get("fast_reply_msg") or "Hello! I am ready to help you research your documents."
+    return {"messages": [AIMessage(content=reply)]}
 
 def summarize_history(state: State, llm):
     """

@@ -60,13 +60,15 @@ def create_gradio_ui() -> gr.Blocks:
         gr.Info(f"Removed all documents")
         return format_file_list()
     
-    def chat_handler(msg, hist):
+    async def chat_handler(msg, hist):
         try:
-            return chat_interface.chat(msg, hist)
+            async for chunk in chat_interface.chat_stream(msg, hist):
+                yield chunk
         except AgentExecutionError as e:
-            return f"Service Error: The agent encountered an issue processing your request."
+            yield f"Service Error: The agent encountered an issue processing your request."
         except Exception as e:
-            return f"An unexpected error occurred."
+            logger.error(f"Chat UI Error: {e}")
+            yield f"An unexpected error occurred."
     
     def clear_chat_handler():
         chat_interface.clear_session()

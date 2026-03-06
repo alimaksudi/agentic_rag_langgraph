@@ -29,6 +29,16 @@ def route_after_orchestrator_call(state: AgentState) -> Literal["tools", "fallba
         
     return "collect_answer"
 
+def route_after_intent(state: State) -> Literal["fast_reply", "summarize_history"]:
+    """
+    Zero-Shot Bypass Router.
+    Routes conversational filler directly to the user, bypassing research.
+    """
+    if state.get("intent_type") == "chat":
+        return "fast_reply"
+    return "summarize_history"
+
+
 def route_after_rewrite(state: State) -> Literal["request_clarification", "agent"]:
     """
     Strategic Workflow Router.
