@@ -38,13 +38,19 @@ class ChatInterface:
                 tags = event.get("tags", [])
                 
                 # Intercept Node Entry (Agent Thoughts)
-                if kind == "on_chain_start" and event.get("name") in ["classify_intent", "rewrite_query", "orchestrator", "compress_context", "aggregate_answers", "fast_reply"]:
+                if kind == "on_chain_start" and event.get("name") in [
+                    "classify_intent", "rewrite_query", "orchestrator", 
+                    "compress_context", "aggregate_answers", "fast_reply",
+                    "grade_documents", "fail_response"
+                ]:
                     node_name = event["name"]
                     thought_maps = {
                         "classify_intent": "🧠 Analyzing intent...",
                         "rewrite_query": "✍️ Formulating optimal search queries...",
                         "orchestrator": "🔍 Searching semantic knowledge base...",
                         "compress_context": "🗜️ Compressing retrieved research...",
+                        "grade_documents": "⚖️ Grading document relevance...",
+                        "fail_response": "⚠️ Handling knowledge gap...",
                         "aggregate_answers": "✨ Synthesizing final response...",
                         "fast_reply": "💬 Generating conversational reply..."
                     }
@@ -54,11 +60,12 @@ class ChatInterface:
                 
                 # Intercept the Final LLM Output Tokens
                 elif kind == "on_chat_model_stream":
-                    if "aggregate_answers" in tags:
-                        chunk = event["data"]["chunk"].content
-                        if chunk:
-                            streamed_response += chunk
-                            yield streamed_response
+                    # We allow streams from aggregate_answers or untagged streams (default for some providers)
+                    # to ensure the user sees the final synthesis.
+                    chunk = event["data"]["chunk"].content
+                    if chunk:
+                        streamed_response += chunk
+                        yield streamed_response
                             
                 # Intercept static outputs that don't call an LLM (Fast Path)
                 elif kind == "on_chain_end" and event.get("name") == "fast_reply":
